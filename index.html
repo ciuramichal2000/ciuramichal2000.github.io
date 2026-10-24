@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Michał Ciura - data and operations, IT technician</title>
+  <meta name="description" content="Michał Ciura: invoices, documents and data work, IT technician education, and three small tested tools built around that work.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home">
+  <header class="top">
+    <div class="wrap">
+      <a class="name" href="#top">Michał Ciura</a>
+      <nav aria-label="Sections"><a class="hide" href="#projects">Projects</a><a class="hide" href="#skills">Skills</a><a class="hide" href="#experience">Experience</a><a class="cv" href="assets/Michal_Ciura_CV.pdf">Download CV</a></nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="cine">
+      <video class="plate" autoplay muted loop playsinline preload="auto" poster="assets/hero-poster.webp" aria-hidden="true"><source src="assets/hero-loop.mp4" type="video/mp4"></video>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="wrap copy">
+        <p class="kicker">Data and operations &middot; IT technician</p>
+        <h1><span>Invoices that add up.</span><span>Data you can trust.</span><span>Tools that prove it.</span></h1>
+        <p class="lead">Over six years of work experience, including two years remotely for US and UK companies. I process roughly 800–1,200 invoices and other documents a month full-time, reconcile payments, and keep records in order. Alongside that, I build small tested tools for the same tasks.</p>
+        <p class="actions"><a class="btn primary" href="assets/Michal_Ciura_CV.pdf">Download CV (PDF)</a><a class="btn glass" href="#projects">See the projects</a><a class="btn glass" href="#contact">Hire me</a></p>
+        <div class="facts"><div><b>6+</b><span>years of work experience</span></div><div><b>800&ndash;1,200</b><span>documents a month, full-time</span></div><div><b>42</b><span>projects with tests</span></div><div><b>2,600+</b><span>automated test cases</span></div></div>
+      </div>
+    </section>
+
+    <section id="featured" class="band">
+      <div class="wrap featured">
+        <div class="ft-copy">
+          <p class="kicker">Featured project</p>
+          <h2>Invoice Hub</h2>
+          <p class="lead">A complete accounts-payable web application: it reads invoices, imports bank statements, proposes which payment belongs to which invoice, and leaves every decision to a person.</p>
+          <ul>
+            <li><strong>Validates, does not guess:</strong> NIP and IBAN checksums, net + VAT = gross, due date after issue date.</li>
+            <li><strong>Human in the loop:</strong> every proposed match waits for approval; nothing is marked paid before that.</li>
+            <li><strong>Secure by design:</strong> hashed passwords, expiring tokens, roles enforced on the server, audit log, hostile text shown as text.</li>
+            <li><strong>Tested end to end:</strong> 29 tests, five of them driving a real browser.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>REST API</span><span>JavaScript</span><span>Playwright</span><span>pytest</span></p>
+          <p class="meta">Demo data is invented. Source code on request until the repository is public.</p>
+        </div>
+        <img class="ft-shot" src="assets/invoice-hub.png" alt="Invoice Hub dashboard: key figures, unpaid by age, matches to review and the invoice table" loading="lazy">
+      </div>
+    </section>
+
+    <section id="projects" class="wrap">
+      <h2>Projects</h2>
+      <p class="muted">41 small projects. Most follow the daily work of an accounts-payable assistant (reading invoices and bank statements, matching payments, converting currencies, validating data, finding duplicates); the rest are general programming (a job queue, a search engine, a REST API with login, a polite web fetcher).
+        Python, Java, SQL, REST, JavaScript and Git are used across them, and every one has automated tests.</p>
+
+      <h3 class="group">Data and operations</h3>
+      <p class="muted">Tools that do the daily work of an accounts-payable assistant: read invoices, match them with payments, convert currencies, analyse the books.</p>
+      <div class="cards">
+        <article class="card">
+          <h3>invoice-reconciler</h3>
+          <p>Reads invoices (text or PDF), imports a bank statement, and reports which invoices were paid, paid with a wrong amount, still unpaid, and which payments belong to no invoice. Has a command line and a REST API.</p>
+          <ul>
+            <li>Matches by reference first, then by amount and date window; a payment is used once.</li>
+            <li>Unreadable invoices are listed, never guessed; imports are idempotent.</li>
+            <li>Clear JSON errors from the API (400, 404, 413, 422).</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>REST API</span><span>Dockerfile</span><span>pytest</span><span>Git</span></p>
+          <a class="more" href="projects/invoice-reconciler.html">Read the case study &rarr;</a>
+          <p class="meta">13 tests · <a href="https://github.com/ciuramichal2000/invoice-reconciler">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>nbp-invoice-converter</h3>
+          <p>Converts foreign-currency invoices to PLN with the official National Bank of Poland rate of the last working day before the invoice date, using the public NBP API.</p>
+          <ul>
+            <li>Steps back over weekends and holidays (the API answers 404 for them).</li>
+            <li>Telling "no rate that day" apart from a real network error.</li>
+            <li>Money on <code>Decimal</code>, rounded half up to the grosz; a bad row does not stop the batch.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>public API</span><span>Decimal</span><span>pytest</span><span>Git</span></p>
+          <a class="more" href="projects/nbp-invoice-converter.html">Read the case study &rarr;</a>
+          <p class="meta">9 tests, none needs the network · <a href="https://github.com/ciuramichal2000/nbp-invoice-converter">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>sql-invoice-analytics</h3>
+          <p>Accounts-payable analytics in plain SQL: an aging report, monthly totals with a running total, vendor shares and ranks, possible duplicate invoices, how late each vendor is paid, and invoice status.</p>
+          <ul>
+            <li>Window functions, CTEs, self joins and date arithmetic, one readable <code>.sql</code> file per question.</li>
+            <li>Amounts as integer cents; a schema with constraints, foreign keys and indexes.</li>
+            <li>Expected answers in the tests worked out by hand, not copied from the output.</li>
+          </ul>
+          <p class="chips"><span>SQL</span><span>SQLite</span><span>Python</span><span>pytest</span><span>Git</span></p>
+          <a class="more" href="projects/sql-invoice-analytics.html">Read the case study &rarr;</a>
+          <p class="meta">11 tests · <a href="https://github.com/ciuramichal2000/sql-invoice-analytics">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>id-validators</h3>
+          <p>Checks the identifiers on every invoice and customer form: Polish NIP, REGON and PESEL, IBAN and EAN bar codes.</p>
+          <ul>
+            <li>Real checksums, not just the length; PESEL also decodes the birth date and century.</li>
+            <li>IBAN follows the country length table and the modulo-97 rule.</li>
+            <li>A CSV mode lists every invalid line.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>checksums</span><span>CLI</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/id-validators">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>csv-toolkit</h3>
+          <p>Reads the CSV files people really send (Windows-1250, semicolons, <code>1 234,56</code>), converts to JSON and back, and validates against a schema.</p>
+          <ul>
+            <li>Reports every problem with its line number instead of stopping at the first.</li>
+            <li>Money is <code>Decimal</code>; Polish and English number and date notation.</li>
+            <li>Type, required, range, regex and unique rules.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>CSV</span><span>JSON</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">17 tests · <a href="https://github.com/ciuramichal2000/csv-toolkit">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>bank-statement-parser</h3>
+          <p>Reads bank statements in three formats (Polish CSV, ISO CSV, MT940), categorises every line and summarises each month.</p>
+          <ul>
+            <li>Checks that the printed balances add up and flags the line where they do not.</li>
+            <li>MT940: multi-line descriptions and reversed entries.</li>
+            <li>Category rules ignore case and Polish letters.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>MT940</span><span>Decimal</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/bank-statement-parser">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>fuzzy-dedupe</h3>
+          <p>Finds duplicate company or person records written differently: &ldquo;ACME Sp. z o.o.&rdquo; and &ldquo;Acme&rdquo;.</p>
+          <ul>
+            <li>Jaro-Winkler written from scratch and checked against the published reference values.</li>
+            <li>Blocking avoids comparing every pair; union-find groups the matches.</li>
+            <li>A person confirms before records are merged.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>string similarity</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">12 tests · <a href="https://github.com/ciuramichal2000/fuzzy-dedupe">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>report-generator</h3>
+          <p>Turns an invoice CSV into a monthly accounts-payable report as text or HTML.</p>
+          <ul>
+            <li>Totals per month and currency, top vendors, overdue invoices worst first.</li>
+            <li>Money is <code>Decimal</code>; vendor names are HTML-escaped.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>HTML</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">5 tests · <a href="https://github.com/ciuramichal2000/report-generator">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>currency-alerts</h3>
+          <p>Rules such as &ldquo;EUR above 4.35 PLN&rdquo; checked against the official NBP rates.</p>
+          <ul>
+            <li>An alert fires once when the condition becomes true, not every hour.</li>
+            <li>Rates stored in SQLite with min, max and average; tested without a network.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>public API</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">4 tests · <a href="https://github.com/ciuramichal2000/currency-alerts">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>expense-tracker</h3>
+          <p>A personal expense tracker with categories, monthly summaries and budgets.</p>
+          <ul>
+            <li>Amounts kept as integer cents, so sums never drift.</li>
+            <li>Budget states ok, warning and over; a text bar chart.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">5 tests · <a href="https://github.com/ciuramichal2000/expense-tracker">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>mini-etl</h3>
+          <p>Config-driven CSV to SQLite ETL with rename, cast, filter, derive and lookup steps, an idempotent keyed load, a run log and a dry-run mode.</p>
+          <ul>
+            <li>Bad rows are rejected with line, stage and reason; setup errors abort and roll back the load</li>
+            <li>Re-runs classify rows as inserted, updated or unchanged, so identical input writes nothing</li>
+            <li>Filter and derive expressions are parsed with ast and a whitelist, never eval</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>pytest</span><span>CSV</span><span>CLI</span></p>
+          <p class="meta">205 tests · <a href="https://github.com/ciuramichal2000/mini-etl">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>invoice-text-extractor</h3>
+          <p>Reads invoice text from a PDF and returns validated fields as JSON, flagging bad NIP and IBAN checksums and totals that do not add up.</p>
+          <ul>
+            <li>Ambiguous &#x27;1,234&#x27; and &#x27;03/04/2024&#x27; return both readings; context settles them only when unique</li>
+            <li>One resolver turns all mentions of a field into found, ambiguous, missing or failed_validation</li>
+            <li>NIP (mod 11) and IBAN (mod 97 plus country length) validators return the reason for rejection</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>Regex</span><span>Decimal</span><span>CLI</span></p>
+          <p class="meta">189 tests · <a href="https://github.com/ciuramichal2000/invoice-text-extractor">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>form-validator</h3>
+          <p>A dependency-free Python library that validates and coerces dict data against a schema, with dotted error paths and English or Polish messages.</p>
+          <ul>
+            <li>Collects every error with a dotted path such as items.2.price, through nested objects and lists</li>
+            <li>Rules emit (code, params); locale catalogs render text, with Polish three-form plurals</li>
+            <li>Strict coercion: rejects bool, NaN, &#x27;1_000&#x27;, non-ASCII digits and huge digit strings</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>Validation</span><span>i18n</span><span>Dataclasses</span></p>
+          <p class="meta">216 tests · <a href="https://github.com/ciuramichal2000/form-validator">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>phone-address-normalizer</h3>
+          <p>Python library that cleans messy contact records: phones to E.164 (PL, US/CA, UK), Polish postal codes and e-mails, with a log of every change.</p>
+          <ul>
+            <li>Validators return result objects with Reason codes instead of raising, so bad rows can be reported in bulk</li>
+            <li>clean_record keeps invalid values as received and logs each rewrite as a Change; e-mail typos are only suggested</li>
+            <li>Resolves ambiguities such as 48501234567 vs the 9-digit Radom number 481234567, and +44 (0)20 trunk zeros</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>E.164</span><span>CLI</span><span>stdlib only</span></p>
+          <p class="meta">191 tests · <a href="https://github.com/ciuramichal2000/phone-address-normalizer">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>todo-cli</h3>
+          <p>Command-line to-do manager with priorities, due dates and tags, stored in a JSON file with atomic writes and clear corruption errors.</p>
+          <ul>
+            <li>Atomic saves via temp file and os.replace; previous version kept as .bak</li>
+            <li>Corrupt or inconsistent files raise a clear error and are never overwritten</li>
+            <li>Ids come from a stored counter, so removed ids are never reused</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>argparse</span><span>JSON</span><span>pytest</span><span>CLI</span></p>
+          <p class="meta">148 tests · <a href="https://github.com/ciuramichal2000/todo-cli">source code on GitHub</a></p>
+        </article>
+      </div>
+      <h3 class="group">Programming</h3>
+      <p class="muted">The same problems solved as software: a second implementation in Java, and a browser dashboard with its logic tested apart from the page. New projects are added here.</p>
+      <div class="cards">
+        <article class="card">
+          <h3>invoice-reconciler-java</h3>
+          <p>The reconciler again in Java 21: it reads invoices and a bank CSV, matches them, and reports what does not add up. Built with Maven into one runnable jar.</p>
+          <ul>
+            <li>Money is <code>BigDecimal</code>, never <code>double</code>; data is held in immutable records.</li>
+            <li>Gives exactly the same result as the Python version on the same files, a cross-check of both.</li>
+            <li>The whole program runs inside a test and its output is asserted.</li>
+          </ul>
+          <p class="chips"><span>Java 21</span><span>Maven</span><span>JUnit 5</span><span>Git</span></p>
+          <a class="more" href="projects/invoice-reconciler-java.html">Read the case study &rarr;</a>
+          <p class="meta">22 tests · <a href="https://github.com/ciuramichal2000/invoice-reconciler-java">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>reconciliation-dashboard</h3>
+          <p>A browser dashboard for the reconciler's report: summary cards, money still open per currency, and a table to filter and search.</p>
+          <ul>
+            <li>Logic and page are separate, so the logic is tested without a browser.</li>
+            <li>Report data is never parsed as HTML.</li>
+            <li>Plain ES modules, no framework and no build step.</li>
+          </ul>
+          <p class="chips"><span>JavaScript</span><span>HTML</span><span>CSS</span><span>Node tests</span><span>Git</span></p>
+          <a class="more" href="projects/reconciliation-dashboard.html">Read the case study &rarr;</a>
+          <p class="meta">6 tests · <a href="demo/index.html">open the live demo</a></p>
+          <a href="demo/index.html"><img class="shot" src="assets/dashboard.png" alt="The dashboard: four summary cards and a table of invoices and payments" loading="lazy"></a>
+        </article>
+
+        <article class="card">
+          <h3>job-queue</h3>
+          <p>A durable background job queue on SQLite with no dependencies.</p>
+          <ul>
+            <li>Retries with exponential backoff and a dead-letter state.</li>
+            <li>A job whose worker crashed goes to another worker; two workers never get the same job.</li>
+            <li>Idempotency keys; tested with a fake clock, so nothing waits.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>concurrency</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/job-queue">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>doc-search</h3>
+          <p>A full-text search engine written from scratch: BM25 ranking, phrase queries and excluded words.</p>
+          <ul>
+            <li>Inverted index with word positions; rare words count for more.</li>
+            <li>Finds &ldquo;zażółć&rdquo; with &ldquo;zazolc&rdquo;; result snippets around the match.</li>
+            <li>Update, delete and save/load as JSON.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>BM25</span><span>indexing</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">10 tests · <a href="https://github.com/ciuramichal2000/doc-search">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>rest-api-auth</h3>
+          <p>A REST API with registration, login and private per-user notes, on the Python standard library.</p>
+          <ul>
+            <li>PBKDF2-SHA256 password hashes; HMAC-signed tokens that expire.</li>
+            <li>Login rate limiting (429); tested against the real server over HTTP.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>REST API</span><span>security</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/rest-api-auth">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>web-scraper-cache</h3>
+          <p>A polite page fetcher: cache with time-to-live, robots.txt respected, spacing between requests.</p>
+          <ul>
+            <li>Retries with exponential backoff; errors are never cached.</li>
+            <li>Fully tested without a network through an injectable transport and clock.</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>HTTP</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/web-scraper-cache">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>task-scheduler</h3>
+          <p>A pure-Python cron parser and job scheduler that computes next run times and runs due jobs against an injectable clock.</p>
+          <ul>
+            <li>Next-run search skips months and days and bisects minutes; handles leap years and 2100</li>
+            <li>Vixie day-of-month/day-of-week OR rule, names, steps; impossible dates like 31 Feb rejected</li>
+            <li>Per-job next_due prevents same-minute double runs, coalesces missed minutes, records errors</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>argparse</span><span>Dependency-free</span><span>Cron</span></p>
+          <p class="meta">137 tests · <a href="https://github.com/ciuramichal2000/task-scheduler">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>markdown-to-html</h3>
+          <p>A from-scratch Markdown-to-HTML converter in Python that escapes all input, with a CLI that prints a converted file to stdout.</p>
+          <ul>
+            <li>Block parser builds a node tree; quotes and list items re-parse their contents recursively</li>
+            <li>CommonMark-style emphasis resolution with flanking rules and the rule of three</li>
+            <li>All text is HTML-escaped and link schemes are allowlisted; tests re-parse the output to check it</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>CLI</span><span>Parsing</span><span>Security</span></p>
+          <p class="meta">199 tests · <a href="https://github.com/ciuramichal2000/markdown-to-html">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>log-analyzer</h3>
+          <p>Command-line tool that reads nginx/Apache access logs line by line and reports top paths, status codes, suspicious IPs, latency and 5xx bursts.</p>
+          <ul>
+            <li>Streaming parser counts malformed lines and keeps samples; the log is never held in memory</li>
+            <li>Sliding-window 5xx burst detector with a minimum-request guard and copy-safe mid-stream snapshots</li>
+            <li>Locale-independent timestamp parsing; nearest-rank p50/p95/p99 using integer arithmetic</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>CLI</span><span>Standard library</span><span>Log analysis</span></p>
+          <p class="meta">96 tests · <a href="https://github.com/ciuramichal2000/log-analyzer">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>text-diff</h3>
+          <p>A from-scratch text diff and patch library with a CLI: Myers line diff, unified output, strict patch checking and word-level diffs.</p>
+          <ul>
+            <li>Myers O(ND) diff checked against a textbook LCS on 400 seeded random inputs</li>
+            <li>Unified diff uses GNU hunk headers; patching verifies every context line</li>
+            <li>Seeded round trip: apply_patch(old, unified_diff(old, new)) == new on 600 pairs</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>Myers diff</span><span>Unified diff</span><span>CLI</span><span>pytest</span></p>
+          <p class="meta">89 tests · <a href="https://github.com/ciuramichal2000/text-diff">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>spreadsheet-engine</h3>
+          <p>A small spreadsheet engine with a hand-written formula parser, dependency-ordered evaluation, cycle detection and CSV loading.</p>
+          <ul>
+            <li>Recursive-descent parser with correct precedence, right-associative ^, no eval</li>
+            <li>Iterative Tarjan SCC finds cycles and orders cells; handles 2,574-deep chains</li>
+            <li>Errors (#CYCLE, #DIV/0, #REF, #NAME) are values that propagate, never exceptions</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>Parser</span><span>Graph algorithms</span><span>CLI</span></p>
+          <p class="meta">279 tests · <a href="https://github.com/ciuramichal2000/spreadsheet-engine">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>kv-store</h3>
+          <p>A persistent key-value store in pure Python with a checksummed append-only log, TTLs, atomic compaction and recovery from half-written records.</p>
+          <ul>
+            <li>Separate CRC32 on the record header, so a flipped length byte is not mistaken for a torn write</li>
+            <li>Crash recovery truncates a half-written final record; mid-log damage raises or truncates by option</li>
+            <li>Compaction writes a temp file, fsyncs it, then swaps it in with os.replace; stale temp files are removed</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>Write-ahead log</span><span>CRC32</span><span>CLI</span></p>
+          <p class="meta">47 tests · <a href="https://github.com/ciuramichal2000/kv-store">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>rate-limiter-lib</h3>
+          <p>A thread-safe Python rate limiter with four algorithms behind one allow(key, cost) call, an injectable clock and bounded memory.</p>
+          <ul>
+            <li>One base class owns lock, clock and sweeping; each algorithm adds only _decide and _is_idle</li>
+            <li>retry_after is computed and checked as tight against random traffic for every algorithm</li>
+            <li>Idle-key sweep is tested to bound memory; swept keys behave like kept ones</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>pytest</span><span>Concurrency</span><span>Standard library</span><span>Rate limiting</span></p>
+          <p class="meta">138 tests · <a href="https://github.com/ciuramichal2000/rate-limiter-lib">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>url-shortener</h3>
+          <p>A URL shortener service on http.server and SQLite with base62 codes, custom codes, click counting and strict URL validation.</p>
+          <ul>
+            <li>Codes are base62 of the row id, and custom codes that match an upcoming code skip that id</li>
+            <li>Clicks are counted by one atomic UPDATE ... RETURNING; 20 concurrent visits give exactly 20</li>
+            <li>Tests run the real server on a free port with an injected clock, with no sleeping or network</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>http.server</span><span>pytest</span><span>base62</span></p>
+          <p class="meta">153 tests · <a href="https://github.com/ciuramichal2000/url-shortener">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>config-loader</h3>
+          <p>Python library that merges defaults, JSON/TOML files, env vars and CLI overrides into one typed config, with value provenance and secret masking.</p>
+          <ul>
+            <li>Deep merge and per-key provenance in one pass; replaced sections drop stale source info</li>
+            <li>Strict schema coercion (no &#x27;1_000&#x27;, &#x27;nan&#x27; or int-as-bool); all validation problems reported at once</li>
+            <li>Secrets masked in repr, explain() and CLI, and never echoed in error messages</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>tomllib</span><span>argparse</span><span>pytest</span><span>Standard library</span></p>
+          <p class="meta">151 tests · <a href="https://github.com/ciuramichal2000/config-loader">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>ics-calendar</h3>
+          <p>A dependency-free Python library that writes, parses and expands iCalendar (.ics) files and finds overlapping events.</p>
+          <ul>
+            <li>Folds at 75 octets on character boundaries; unfolds bytes before UTF-8 decoding</li>
+            <li>Parser skips nested VALARM/VTIMEZONE so they can&#x27;t overwrite event fields</li>
+            <li>Conflict detection is an O(n log n) sweep with half-open intervals</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>RFC 5545</span><span>pytest</span><span>Standard library</span><span>CLI</span></p>
+          <p class="meta">159 tests · <a href="https://github.com/ciuramichal2000/ics-calendar">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>it-service-desk</h3>
+          <p>Reference IT service desk: tickets with SLA deadlines, roles, change history and a notification outbox.</p>
+          <ul>
+            <li>Roles: requesters see only their own tickets; agents see all</li>
+            <li>Status moves only along allowed transitions; every change is logged</li>
+            <li>SLA report: breached, at risk and met; clock injected in tests</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/it-service-desk">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>it-asset-inventory</h3>
+          <p>Reference IT asset register with one holder at a time, assignment and repair history and a warranty report.</p>
+          <ul>
+            <li>Assignment rules enforced in the data layer, full history kept</li>
+            <li>Repair flow closes the assignment; retiring is refused while in use</li>
+            <li>Warranty report, summary and CSV export</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">7 tests · <a href="https://github.com/ciuramichal2000/it-asset-inventory">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>it-automation-toolkit</h3>
+          <p>Administrator tools in Python and PowerShell: folder organiser with undo, backup rotation, log scanner and a disk report.</p>
+          <ul>
+            <li>Dry run, no overwriting, undo log that refuses to clobber files</li>
+            <li>PowerShell script tested for real when PowerShell is available</li>
+            <li>Log scanning survives bad bytes</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>PowerShell</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">7 tests · <a href="https://github.com/ciuramichal2000/it-automation-toolkit">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>db-backup-verifier</h3>
+          <p>SQLite backups that are verified: checksum manifest, integrity check, real restore test and retention.</p>
+          <ul>
+            <li>Consistent snapshot via SQLite&#x27;s backup API</li>
+            <li>Catches a damaged file even if the manifest is rewritten</li>
+            <li>Restore test compares row counts with the live database</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">9 tests · <a href="https://github.com/ciuramichal2000/db-backup-verifier">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>api-test-framework</h3>
+          <p>A small HTTP API test framework with declarative cases, boundary-value and authentication generators and an HTML report.</p>
+          <ul>
+            <li>Boundary cases catch a planted off-by-one bug</li>
+            <li>Tested against a real local HTTP server</li>
+            <li>Unreachable server fails the case instead of crashing the run</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>HTTP</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">8 tests · <a href="https://github.com/ciuramichal2000/api-test-framework">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>network-monitor</h3>
+          <p>Availability monitor with TCP and HTTP checks, outage detection that alerts once and recovers, and uptime statistics.</p>
+          <ul>
+            <li>DOWN after N failures in a row, UP on recovery, no repeats</li>
+            <li>Open outage survives a restart</li>
+            <li>Real checks tested against a local socket and HTTP server</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>TCP/HTTP</span><span>SQLite</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">7 tests · <a href="https://github.com/ciuramichal2000/network-monitor">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>helpdesk-assistant</h3>
+          <p>A helpdesk assistant that answers only from the documentation, with role-based access and honest &#x27;not found&#x27;.</p>
+          <ul>
+            <li>BM25 retrieval; a document must cover enough of the question</li>
+            <li>Model answers must cite real sources or are rejected</li>
+            <li>No model bundled; real answer quality is not measured</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>BM25</span><span>LLM-ready</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">12 tests · <a href="https://github.com/ciuramichal2000/helpdesk-assistant">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>anomaly-detector</h3>
+          <p>Finds suspicious payments and duplicate invoices with explainable rules and an optional Isolation Forest, and measures itself.</p>
+          <ul>
+            <li>Duplicates, split payments under an approval limit, robust per-vendor outliers</li>
+            <li>Every finding states why; precision, recall and false-positive rate are computed</li>
+            <li>Tested on 515 synthetic payments with 15 injected problems</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>scikit-learn</span><span>statistics</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">9 tests · <a href="https://github.com/ciuramichal2000/anomaly-detector">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>event-processor</h3>
+          <p>Event-driven transaction processing: idempotent events, per-account ordering, transactional outbox, at-least-once relay and replay.</p>
+          <ul>
+            <li>Early events are buffered and applied when the gap is filled</li>
+            <li>A crash during relay resends; an idempotent consumer absorbs duplicates</li>
+            <li>Balances rebuilt from the log equal the stored ones in any arrival order</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>SQLite</span><span>event-driven</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">14 tests · <a href="https://github.com/ciuramichal2000/event-processor">source code on GitHub</a></p>
+        </article>
+
+        <article class="card">
+          <h3>pl-tax-calculator</h3>
+          <p>Compares ryczalt, flat 19% and the tax scale with contributions, finds the revenue needed for a target net income, and caps automated costs per job.</p>
+          <ul>
+            <li>All yearly figures live in one Rules object; logic tested with hand-checkable rules</li>
+            <li>Revenue needed for a target net income, and the cost level where flat tax overtakes ryczalt</li>
+            <li>Cost cap: per-job share of revenue plus a fleet ceiling, refusing a charge before it is recorded</li>
+          </ul>
+          <p class="chips"><span>Python</span><span>tax logic</span><span>pytest</span><span>Git</span></p>
+          <p class="meta">14 tests · <a href="https://github.com/ciuramichal2000/pl-tax-calculator">source code on GitHub</a></p>
+        </article>
+      </div>
+
+      <p class="note"><strong>How these were built.</strong> With AI coding assistance. Each project has automated tests that were run before every commit (2,600+ in total), and the dashboard was also checked in a real browser.</p>
+    </section>
+
+    <section id="client-work" class="wrap">
+      <h2>Client projects</h2>
+      <p class="muted">Freelance work delivered to individual clients in Poland and abroad (found through OLX and online groups), after hours alongside my main job: websites, chatbots, scripts and simple commands, bug fixes, and checking and testing of code and security. Typical order: 500-2,000 PLN. The source code belongs to the clients and is not public, so the projects above are the ones I can show in full.</p>
+      <ul class="clientlist">
+        <li><strong>Enterprise Workflow Automation Platform</strong> Business process definitions, automatic task execution, retries and dead-letter queues, roles, audit logs, REST API. <span class="chips"><span>Python</span><span>FastAPI</span><span>PostgreSQL</span><span>Redis</span><span>Celery</span></span></li>
+        <li><strong>AI-Powered Document Intelligence System</strong> Reads invoices and contracts, extracts and validates fields, detects duplicates and discrepancies, human review for uncertain results. <span class="chips"><span>OCR</span><span>Python</span><span>LLM APIs</span><span>Pydantic</span></span></li>
+        <li><strong>Enterprise RAG Knowledge Assistant</strong> Answers questions from company documents and shows the sources; chunking, reranking and access control. <span class="chips"><span>Python</span><span>FastAPI</span><span>embeddings</span><span>vector database</span></span></li>
+        <li><strong>Real-Time Data Pipeline and Analytics Platform</strong> Collects data from many sources, validates schemas, deduplicates and serves current reports. <span class="chips"><span>Python</span><span>SQL</span><span>PostgreSQL</span><span>dbt</span><span>Airflow</span></span></li>
+        <li><strong>Cloud-Native Microservices Platform</strong> Independent services with automated deployment, monitoring and availability checks. <span class="chips"><span>Docker</span><span>Kubernetes</span><span>Terraform</span><span>GitHub Actions</span><span>Prometheus</span><span>Grafana</span></span></li>
+        <li><strong>Financial Fraud and Anomaly Detection Engine</strong> Flags unusual payments and duplicate invoices; evaluated with precision, recall and false-positive rate. <span class="chips"><span>Python</span><span>pandas</span><span>scikit-learn</span><span>SQL</span></span></li>
+        <li><strong>Enterprise QA Automation Framework</strong> Automated API and application tests with reports and regression detection before release. <span class="chips"><span>Python</span><span>pytest</span><span>Playwright</span></span></li>
+        <li><strong>Event-Driven Transaction Processing System</strong> Business events and settlements without tight coupling between services; idempotency, retries, replay. <span class="chips"><span>Kafka</span><span>Python</span><span>Java</span><span>PostgreSQL</span></span></li>
+        <li><strong>IT Service Desk System</strong> Tickets, users and equipment; roles, priorities, history, SLA reports and notifications. <span class="chips"><span>Python</span><span>Django</span><span>FastAPI</span><span>PostgreSQL</span></span></li>
+        <li><strong>Network Monitoring System</strong> Availability and latency of devices, servers and services; outage history and threshold alerts. <span class="chips"><span>Python</span><span>SNMP</span><span>ICMP</span><span>REST API</span></span></li>
+        <li><strong>IT Automation Toolkit</strong> Automates repeated administrator tasks: file organisation, backups, log analysis, reporting and scheduling. <span class="chips"><span>Python</span><span>PowerShell</span><span>Bash</span></span></li>
+        <li><strong>Database Management and Backup Platform</strong> Database backups with restore tests, integrity checks and error reports. <span class="chips"><span>PostgreSQL</span><span>SQL</span><span>Python</span></span></li>
+        <li><strong>Security Log Analyzer</strong> Detects suspicious events in system logs (repeated failed logins), correlates and filters alerts, security dashboard. <span class="chips"><span>Python</span><span>regex</span><span>JSON</span><span>SQL</span></span></li>
+        <li><strong>Automated API Testing Framework</strong> Positive, negative and boundary tests, authentication and validation checks, HTML reports in CI. <span class="chips"><span>Python</span><span>pytest</span><span>requests</span></span></li>
+        <li><strong>Server Deployment Automation</strong> Application deployment on Linux servers with automatic health checks, logs and service restarts. <span class="chips"><span>Linux</span><span>SSH</span><span>Docker</span><span>Bash</span><span>GitHub Actions</span></span></li>
+        <li><strong>IT Asset Inventory System</strong> Register of computers, monitors, licences, users and repair history; warranty dates, CSV export and reports. <span class="chips"><span>Python</span><span>SQL</span><span>REST API</span></span></li>
+        <li><strong>Active Directory Administration</strong> Accounts, groups, policies and access in a Windows Server environment; onboarding and offboarding automation. <span class="chips"><span>Windows Server</span><span>Active Directory</span><span>PowerShell</span></span></li>
+        <li><strong>AI IT Helpdesk Assistant</strong> Answers technical questions from documentation and a company knowledge base, with source links and quality tests. <span class="chips"><span>Python</span><span>FastAPI</span><span>LLM API</span></span></li>
+      </ul>
+    </section>
+
+    <section id="skills" class="band"><div class="wrap">
+      <h2>Skills, and where to see them</h2>
+      <table class="skills">
+        <thead><tr><th>Skill</th><th>Where it is used</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr><td>Invoices, payments, reconciliation</td><td>Six years of work, and the reconciler</td><td>800–1,200 documents a month full-time; <a href="projects/invoice-reconciler.html">invoice-reconciler</a></td></tr>
+          <tr><td>SQL (window functions, CTEs, joins)</td><td>sql-invoice-analytics</td><td><a href="projects/sql-invoice-analytics.html">Six queries</a> with answers checked by hand; a schema with constraints and indexes</td></tr>
+          <tr><td>Java (records, BigDecimal, Maven, JUnit 5)</td><td>invoice-reconciler-java</td><td><a href="projects/invoice-reconciler-java.html">Case study</a>; 22 tests; the same result as the Python version</td></tr>
+          <tr><td>Python</td><td>invoice-reconciler, nbp-invoice-converter, sql-invoice-analytics</td><td>Idempotent imports, two matching passes, an injectable HTTP layer</td></tr>
+          <tr><td>REST API design</td><td>invoice-reconciler API; public NBP API</td><td>JSON errors (400/404/413/422); 404 versus real failures</td></tr>
+          <tr><td>JavaScript, HTML, CSS</td><td>reconciliation-dashboard</td><td><a href="demo/index.html">Live demo</a>; logic tested apart from the page</td></tr>
+          <tr><td>Automated testing</td><td>All 41 projects</td><td>2,600+ tests; none of the converter's needs the network</td></tr>
+          <tr><td>Git</td><td>Each project is its own repository</td><td>Several commits each, with meaningful messages; a GitHub Actions workflow in each (not run yet)</td></tr>
+        </tbody>
+      </table>
+    </div></section>
+
+    <section id="experience" class="wrap">
+      <h2>Experience</h2>
+      <ul class="timeline">
+        <li><span class="when">Feb 2022 – present</span><span><strong>Freelance Programmer (part-time)</strong>, independent commissions, remote: over 300 completed programming projects for individual clients, done after hours alongside the main job. See the projects above.</span></li>
+        <li><span class="when">Jul 2024 – Sep 2026</span><span><strong>Hotel Manager (invoicing and administrative responsibilities)</strong>, Diament, a family-owned hotel and wedding venue: invoices, comparing them with bank transfers, internal procedures.</span></li>
+        <li><span class="when">Aug 2023 – Jul 2024</span><span><strong>Finance Assistant</strong>, Seeq (US company), remote, full-time: invoices and financial documents, roughly 800–1,200 documents a month.</span></li>
+        <li><span class="when">Apr 2022 – Jul 2023</span><span><strong>Operations Assistant / Data and Research Assistant</strong>, Cuvva (UK company), remote: data updates, documentation, internal processes.</span></li>
+        <li><span class="when">Nov 2019 – Feb 2022</span><span><strong>Customer Service Representative</strong>, T-Mobile: call center and live chat in Polish, 80+ chats or 100+ calls a day.</span></li>
+      </ul>
+      <p class="muted">Education: Technical Secondary School (ZST), Częstochowa, IT technician programme. English language course, level C1.</p>
+    </section>
+
+    <section id="contact" class="closer"><div class="wrap">
+      <h2>Need invoices reconciled, data cleaned or a small tool built?</h2>
+      <p>I take on accounts-payable support, document and data processing, and small Python, SQL and Java tools. Remote, flexible hours.</p>
+      <p class="actions"><a class="btn primary" href="mailto:ciuramichal13@gmail.com">Write to me</a><a class="btn glass" href="assets/Michal_Ciura_CV.pdf">Download CV (PDF)</a><a class="btn glass" href="https://github.com/ciuramichal2000">GitHub</a><a class="btn glass" href="https://www.linkedin.com/in/micha%C5%82-ciura-1a105434b/">LinkedIn</a></p>
+    </div></section>
+  </main>
+
+  <footer class="foot"><div class="wrap"><p>Michał Ciura · Częstochowa, Poland · This page was built with AI coding assistance. Mars imagery: NASA/JPL, public domain (no endorsement by NASA implied); hero footage licensed.</p></div></footer>
+</body>
+</html>

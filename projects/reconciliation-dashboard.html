@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>reconciliation-dashboard - Michał Ciura</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap"><a class="name" href="../index.html">Michał Ciura</a>
+    <nav aria-label="Sections"><a href="../index.html#projects">Projects</a><a class="hide" href="../index.html#experience">Experience</a><a class="cv" href="../assets/Michal_Ciura_CV.pdf">Download CV</a></nav></div></header>
+  <main class="wrap article">
+    <p class="crumb"><a href="../index.html#projects">&larr; All projects</a></p>
+    <p class="kicker">Case study · JavaScript, HTML, CSS</p>
+    <h1>reconciliation-dashboard</h1>
+    <p class="lead">A browser dashboard for the reconciler's report: summary cards, the money still open per currency, and a table to filter and search.</p>
+    
+    <h2>The problem</h2>
+    <p>The reconciler produces a JSON report. A person reading it wants four numbers and a list: how many invoices matched, how many have a wrong amount, how many are unpaid, how many payments are unexplained,
+    and how much money is still open in each currency. This page shows exactly that, with a filter and a search.</p>
+    <p><a class="btn primary" href="../demo/index.html">Open the live demo</a></p>
+    <a href="../demo/index.html"><img class="shot" src="../assets/dashboard.png" alt="The dashboard: four summary cards and a table of invoices and payments"></a>
+
+    <h2>Design</h2>
+    <ul>
+      <li><strong>Logic and page are separate.</strong> <code>report.js</code> holds pure functions (flatten the report, summarise, filter, format money, validate). <code>app.js</code> is only DOM glue.
+      That is why the logic is tested with Node's built-in test runner, with no browser and no dependency.</li>
+      <li><strong>Report data is never parsed as HTML.</strong> Everything is written with <code>textContent</code>. The sample data contains a description with <code>&lt;b&gt;</code> tags on purpose,
+      and the page shows it as literal text.</li>
+      <li><strong>Plain ES modules:</strong> no framework, no build step, nothing to install.</li>
+      <li>A broken report or a missing file shows a clear message instead of an empty page. Light and dark theme follow the system setting, and the table adapts to narrow screens.</li>
+    </ul>
+
+    <h2>The summary logic</h2>
+    <figure><figcaption>summarize() in report.js</figcaption><pre><code>/** Counts per status and the money still open, summed per currency in whole cents (no floating-point drift). */
+export function summarize(report) {
+  const counts = Object.fromEntries(STATUSES.map((s) =&gt; [s, (report[s] ?? []).length]));
+  const sumBy = (items, field) =&gt; {
+    const totals = {};
+    for (const it of items) totals[it.currency] = (totals[it.currency] ?? 0) + cents(it[field]);
+    return Object.fromEntries(Object.entries(totals).map(([c, v]) =&gt; [c, v / 100]));
+  };
+  return {
+    counts,
+    total: Object.values(counts).reduce((a, b) =&gt; a + b, 0),
+    unpaidTotals: sumBy(report.unpaid_invoices ?? [], "total"),
+    unmatchedTotals: sumBy(report.unmatched_payments ?? [], "amount"),
+  };
+}</code></pre></figure>
+    <p>Money is summed in whole cents, so 59.90 + 40.10 is exactly 100.00 and not 99.99999999999999.</p>
+
+    <h2>Checked in a real browser</h2>
+    <p>Besides the unit tests, the page was opened in a real browser: the four cards and their counts, the status filter, the text search, the empty state, the error state for a missing file, the escaping
+    of markup in the data, and the demo running from a sub-folder.</p>
+
+    <h2>Tests</h2>
+    <p>6 tests pass with <code>node --test</code>. Covered: flattening, per-status counts, money sums per currency, filters, money formatting with a fallback for unknown currency codes, and report validation.</p>
+    <p class="stack"><strong>Stack:</strong> JavaScript (ES modules), HTML, CSS, Node test runner, Git.</p>
+    <p class="muted">Source code available on request.</p>
+
+    <p class="next">Next: <a href="sql-invoice-analytics.html">sql-invoice-analytics &rarr;</a></p>
+  </main>
+  <footer class="foot"><div class="wrap"><p>Michał Ciura · Częstochowa, Poland · This page was built with AI coding assistance.</p></div></footer>
+</body>
+</html>

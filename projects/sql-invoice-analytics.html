@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sql-invoice-analytics - Michał Ciura</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap"><a class="name" href="../index.html">Michał Ciura</a>
+    <nav aria-label="Sections"><a href="../index.html#projects">Projects</a><a class="hide" href="../index.html#experience">Experience</a><a class="cv" href="../assets/Michal_Ciura_CV.pdf">Download CV</a></nav></div></header>
+  <main class="wrap article">
+    <p class="crumb"><a href="../index.html#projects">&larr; All projects</a></p>
+    <p class="kicker">Case study · SQL, SQLite, Python</p>
+    <h1>sql-invoice-analytics</h1>
+    <p class="lead">Accounts-payable analytics written as plain SQL: aging report, running totals, vendor shares, duplicate detection, payment behaviour and invoice status.</p>
+    
+    <h2>The problem</h2>
+    <p>The questions a finance team asks of its invoices are the same every month: what do we still owe and for how long, how much did we spend with each vendor, did we receive the same invoice twice,
+    who do we pay late. Each of them is one SQL query. This project keeps every question in its own readable <code>.sql</code> file, runs them from a small Python program, and tests each one against a dataset
+    whose answers were worked out by hand.</p>
+
+    <h2>An aging report</h2>
+    <p>What is still owed on a given date, grouped by how overdue it is. It can be run for any past date, because payments made after that date are ignored.</p>
+    <figure><figcaption>queries/aging.sql</figcaption><pre><code>-- Aging report: what is still owed on :as_of, grouped by how overdue it is.
+-- Payments after :as_of are ignored, so the report can be run for any past date.
+WITH paid AS (
+  SELECT invoice_number, SUM(amount_cents) AS paid_cents
+  FROM payments
+  WHERE paid_date &lt;= :as_of
+  GROUP BY invoice_number
+),
+open_items AS (
+  SELECT i.currency,
+         i.gross_cents - COALESCE(p.paid_cents, 0)                       AS open_cents,
+         CAST(julianday(:as_of) - julianday(i.due_date) AS INTEGER)     AS days_overdue
+  FROM invoices i
+  LEFT JOIN paid p ON p.invoice_number = i.number
+  WHERE i.issue_date &lt;= :as_of
+)
+SELECT currency,
+       CASE WHEN days_overdue &lt;= 0  THEN 'not due'
+            WHEN days_overdue &lt;= 30 THEN '1-30 days'
+            WHEN days_overdue &lt;= 60 THEN '31-60 days'
+            WHEN days_overdue &lt;= 90 THEN '61-90 days'
+            ELSE '90+ days' END                                          AS bucket,
+       CASE WHEN days_overdue &lt;= 0  THEN 0
+            WHEN days_overdue &lt;= 30 THEN 1
+            WHEN days_overdue &lt;= 60 THEN 2
+            WHEN days_overdue &lt;= 90 THEN 3
+            ELSE 4 END                                                   AS bucket_order,
+       COUNT(*)                                                          AS invoices,
+       SUM(open_cents)                                                   AS open_cents
+FROM open_items
+WHERE open_cents &gt; 0                                                     -- fully paid and overpaid invoices owe nothing
+GROUP BY currency, bucket_order
+ORDER BY currency, bucket_order;</code></pre></figure>
+    <figure><figcaption>$ python -m analytics aging --as-of 2026-05-10</figcaption><pre><code>== aging
+currency  bucket      bucket_order  invoices  open
+--------  ----------  ------------  --------  -------
+EUR       1-30 days   1             1         1310.00
+EUR       31-60 days  2             2         800.00
+GBP       1-30 days   1             1         740.00
+USD       not due     0             1         310.25
+USD       1-30 days   1             1         600.00</code></pre></figure>
+    <p>Overpaid and fully paid invoices owe nothing, so they never appear. FV/2026/002 owes 300.00 and FV/2026/003 500.00, both 59 days past due: the two invoices in the 31-60 bucket add up to 800.00.</p>
+
+    <h2>Window functions: shares and ranks</h2>
+    <figure><figcaption>queries/vendor_share.sql</figcaption><pre><code>-- How concentrated is the spending: each vendor's share of the total per currency, and its rank.
+WITH totals AS (
+  SELECT v.name AS vendor, i.currency, SUM(i.gross_cents) AS total_cents
+  FROM invoices i
+  JOIN vendors v ON v.id = i.vendor_id
+  GROUP BY v.id, i.currency
+)
+SELECT vendor,
+       currency,
+       total_cents,
+       ROUND(100.0 * total_cents / SUM(total_cents) OVER (PARTITION BY currency), 1)  AS share_pct,
+       RANK() OVER (PARTITION BY currency ORDER BY total_cents DESC)                  AS rank_in_currency
+FROM totals
+ORDER BY currency, rank_in_currency, vendor;</code></pre></figure>
+    <h2>A self join: possible duplicate invoices</h2>
+    <figure><figcaption>queries/possible_duplicates.sql</figcaption><pre><code>-- Possible duplicate invoices: same vendor, amount, currency and issue date under different numbers.
+-- A self join; "a.number &lt; b.number" lists each pair once and never pairs an invoice with itself.
+SELECT a.number     AS invoice_a,
+       b.number     AS invoice_b,
+       v.name       AS vendor,
+       a.currency,
+       a.gross_cents,
+       a.issue_date
+FROM invoices a
+JOIN invoices b
+  ON  b.vendor_id   = a.vendor_id
+  AND b.gross_cents = a.gross_cents
+  AND b.currency    = a.currency
+  AND b.issue_date  = a.issue_date
+  AND a.number &lt; b.number
+JOIN vendors v ON v.id = a.vendor_id
+ORDER BY a.issue_date, a.number, b.number;</code></pre></figure>
+    <h2>Behaviour of each vendor's invoices</h2>
+    <p>Only invoices paid in full count, and the last payment date decides. A negative average means invoices were paid before they were due.</p>
+    <figure><figcaption>$ python -m analytics payment_behaviour</figcaption><pre><code>== payment_behaviour
+vendor               settled_invoices  avg_days_late  paid_late
+-------------------  ----------------  -------------  ---------
+Green Cloud Inc      1                 8.0            1
+Acme Supplies Ltd    2                 3.5            1
+Blue Office GmbH     2                 -2.0           0
+Northwind Logistics  1                 -3.0           0</code></pre></figure>
+
+    <h2>Decisions worth mentioning</h2>
+    <ul>
+      <li><strong>Amounts are integer cents.</strong> Sums and comparisons are exact; the program turns cents into money only when printing.</li>
+      <li><strong>The schema defends the data:</strong> <code>CHECK</code> constraints, foreign keys switched on (SQLite ignores them unless asked), unique invoice numbers, and tests that prove bad data is rejected.</li>
+      <li><strong>The expected answers in the tests are worked out by hand</strong> on a small dataset, not copied from the program's output, so a wrong query cannot pass by agreeing with itself.</li>
+    </ul>
+
+    <h2>Tests</h2>
+    <p>11 passed in 0.02s Covered: the aging buckets and the as-of date, running totals, shares and ranks, duplicate pairs, payment behaviour, statuses, the schema rejecting bad data, money conversion and the command line.
+    A GitHub Actions workflow is included; it runs once the repository is on GitHub (it has not been run yet).</p>
+    <p class="stack"><strong>Stack:</strong> SQL (SQLite with window functions), Python 3 (standard library only), pytest, Git.</p>
+    <p class="muted">Source code available on request.</p>
+
+    <p class="next">Next: <a href="invoice-reconciler-java.html">invoice-reconciler-java &rarr;</a></p>
+  </main>
+  <footer class="foot"><div class="wrap"><p>Michał Ciura · Częstochowa, Poland · This page was built with AI coding assistance.</p></div></footer>
+</body>
+</html>

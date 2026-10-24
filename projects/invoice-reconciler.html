@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>invoice-reconciler - Michał Ciura</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap"><a class="name" href="../index.html">Michał Ciura</a>
+    <nav aria-label="Sections"><a href="../index.html#projects">Projects</a><a class="hide" href="../index.html#experience">Experience</a><a class="cv" href="../assets/Michal_Ciura_CV.pdf">Download CV</a></nav></div></header>
+  <main class="wrap article">
+    <p class="crumb"><a href="../index.html#projects">&larr; All projects</a></p>
+    <p class="kicker">Case study · Python, SQLite, REST API</p>
+    <h1>invoice-reconciler</h1>
+    <p class="lead">Matches invoices to bank payments and reports what does not add up: paid, paid with a wrong amount, still unpaid, and payments that belong to no invoice.</p>
+    
+    <h2>The problem</h2>
+    <p>In accounts payable the same question comes up every day: this invoice says 1,230.00 EUR, did the bank transfer arrive, and was it the same amount? Done by hand, over hundreds of documents,
+    it is slow and easy to get wrong. This tool does that comparison and, more importantly, says plainly what it could not match.</p>
+
+    <h2>How the matching works</h2>
+    <ol>
+      <li><strong>By reference.</strong> The invoice number appears in the payment description. Same amount: <code>matched</code>. Different amount: <code>amount-mismatch</code>, with the difference.</li>
+      <li><strong>By amount and date.</strong> No reference, but the same currency, the amount within a tolerance and a booking date 0 to 60 days after the issue date.</li>
+      <li>A payment is used at most once. Whatever is left is reported as an unpaid invoice or an unmatched payment. Nothing is silently dropped.</li>
+    </ol>
+    <figure><figcaption>The first matching pass (from reconcile.py)</figcaption><pre><code>    # pass 1: by reference
+    for inv in invoices:
+        key = _norm(inv["number"])
+        for p in pays:
+            if p["id"] in used or p["currency"] != inv["currency"] or not key or key not in _norm(p["description"]):
+                continue
+            diff = round(p["amount"] - inv["total"], 2)
+            status = "matched" if abs(diff) &lt;= tolerance else "amount-mismatch"
+            used.add(p["id"])
+            db.save_match(conn, inv["number"], p["id"], status, diff)
+            inv["_done"] = True
+            result["matched" if status == "matched" else "amount_mismatch"].append({"invoice": inv["number"], "payment_id": p["id"], "difference": diff})
+            break</code></pre></figure>
+
+    <h2>It running on the sample data</h2>
+    <p>Three sample invoices (one of them a text file with no invoice in it) and a three-line bank statement:</p>
+    <figure><figcaption>$ import-invoices sample_data/invoices</figcaption><pre><code>{
+ "imported": 3,
+ "already_known": 0,
+ "skipped": [
+  "notes.txt"
+ ]
+}</code></pre></figure>
+    <figure><figcaption>$ import-bank sample_data/bank.csv</figcaption><pre><code>{
+ "imported": 3,
+ "already_known": 0,
+ "skipped": 0
+}</code></pre></figure>
+    <figure><figcaption>$ reconcile</figcaption><pre><code>{
+ "matched": 1,
+ "amount_mismatch": 1,
+ "unpaid_invoices": 1,
+ "unmatched_payments": 1
+}
+amount_mismatch    {'invoice': 'BO-5521', 'payment_id': 2, 'difference': -5.0}
+unpaid_invoices    {'invoice': 'GC-77', 'total': 59.9, 'currency': 'EUR'}
+unmatched_payments {'payment_id': 3, 'amount': 300.0, 'currency': 'EUR', 'description': 'Unknown sender'}</code></pre></figure>
+    <p>The invoice with a 5.00 EUR short payment, the unpaid invoice and the payment from an unknown sender are exactly the three things an accountant wants to see.</p>
+
+    <h2>Decisions worth mentioning</h2>
+    <ul>
+      <li><strong>Never guess.</strong> An invoice without a number or a total is listed as skipped. A wrong guess would corrupt the reconciliation, and a skipped file is easy to look at.</li>
+      <li><strong>Imports are idempotent.</strong> The same file imported twice changes nothing (unique keys in SQLite).</li>
+      <li><strong>Amounts in every common format</strong>: <code>1,234.50</code>, <code>1 234,50</code>, <code>1.234,50</code>, <code>1234.5</code>.</li>
+      <li><strong>The API has real error handling:</strong> 400 for malformed JSON, 404 for unknown paths, 413 for oversized bodies, 422 for content that cannot be read, all as JSON.</li>
+    </ul>
+
+    <h2>The data model</h2>
+    <figure><figcaption>SQLite schema (db.py)</figcaption><pre><code>CREATE TABLE IF NOT EXISTS invoices(number TEXT PRIMARY KEY, issue_date TEXT, total REAL NOT NULL, currency TEXT NOT NULL, vendor TEXT, source TEXT);
+CREATE TABLE IF NOT EXISTS payments(id INTEGER PRIMARY KEY AUTOINCREMENT, booked TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL, description TEXT,
+  UNIQUE(booked, amount, currency, description));
+CREATE TABLE IF NOT EXISTS matches(invoice_number TEXT PRIMARY KEY, payment_id INTEGER NOT NULL, status TEXT NOT NULL, difference REAL NOT NULL DEFAULT 0);</code></pre></figure>
+
+    <h2>Tests</h2>
+    <p>13 passed in 2.61s Covered: amount and date formats, field extraction, both matching passes, the one-payment-once rule, the currency check, the date window, idempotent imports and the whole HTTP API.
+    A <code>Dockerfile</code> is included but was not built in the environment where this was developed.</p>
+    <p class="stack"><strong>Stack:</strong> Python 3 (standard library only), SQLite, REST over <code>http.server</code>, pytest, Git.</p>
+    <p class="muted">Source code available on request.</p>
+
+    <p class="next">Next: <a href="nbp-invoice-converter.html">nbp-invoice-converter &rarr;</a></p>
+  </main>
+  <footer class="foot"><div class="wrap"><p>Michał Ciura · Częstochowa, Poland · This page was built with AI coding assistance.</p></div></footer>
+</body>
+</html>

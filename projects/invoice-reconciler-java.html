@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>invoice-reconciler-java - Michał Ciura</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap"><a class="name" href="../index.html">Michał Ciura</a>
+    <nav aria-label="Sections"><a href="../index.html#projects">Projects</a><a class="hide" href="../index.html#experience">Experience</a><a class="cv" href="../assets/Michal_Ciura_CV.pdf">Download CV</a></nav></div></header>
+  <main class="wrap article">
+    <p class="crumb"><a href="../index.html#projects">&larr; All projects</a></p>
+    <p class="kicker">Case study · Java 21, Maven, JUnit 5</p>
+    <h1>invoice-reconciler-java</h1>
+    <p class="lead">The invoice reconciler written again in Java: exact BigDecimal money, immutable records, a runnable jar and JUnit 5 tests.</p>
+    
+    <h2>Why a second version</h2>
+    <p>Java is the language many finance and enterprise systems are written in, so I wrote the reconciler again in Java 21 to show the same logic in a typed, compiled setting.
+    It has no runtime dependencies (JUnit 5 is used for the tests) and it is built with Maven into a single runnable jar.</p>
+
+    <h2>What is different from the Python version</h2>
+    <ul>
+      <li><strong>Money is <code>BigDecimal</code> with two decimals, never <code>double</code>.</strong> 0.1 + 0.2 is exactly 0.30; there is a test for it.</li>
+      <li><strong>Records</strong> (<code>Invoice</code>, <code>Payment</code>, <code>Match</code>, <code>Result</code>) make the data immutable and give <code>equals</code> and <code>toString</code> for free.</li>
+      <li><strong><code>Main.run</code> is separate from <code>Main.main</code>,</strong> so the whole program runs inside a test without <code>System.exit</code> and its output can be asserted.</li>
+      <li>Unreadable input is reported with its position, never guessed.</li>
+    </ul>
+
+    <h2>Parsing an amount</h2>
+    <figure><figcaption>Money.java</figcaption><pre><code>    /** "1,234.50", "1 234,50", "1.234,50" and "1234.5" all become 1234.50. */
+    public static BigDecimal parseAmount(String text) {
+        String s = text.strip().replaceAll("\\s", "");
+        if (s.contains(",") &amp;&amp; s.contains(".")) {
+            boolean commaDecimal = s.lastIndexOf(',') &gt; s.lastIndexOf('.');
+            s = commaDecimal ? s.replace(".", "").replace(',', '.') : s.replace(",", "");
+        } else if (s.contains(",")) {
+            int i = s.lastIndexOf(',');
+            String tail = s.substring(i + 1);
+            // "1,234" is a thousands separator, "12,5" and "12,50" are decimals
+            s = (tail.length() == 1 || tail.length() == 2) ? s.substring(0, i).replace(",", "") + "." + tail : s.replace(",", "");
+        }
+        return new BigDecimal(s).setScale(2, RoundingMode.HALF_UP);
+    }</code></pre></figure>
+
+    <h2>The matching (first pass)</h2>
+    <figure><figcaption>Reconciler.java</figcaption><pre><code>    public record Match(String invoice, long paymentId, BigDecimal difference) {}
+
+    public record Result(List&lt;Match&gt; matched, List&lt;Match&gt; amountMismatch, List&lt;Invoice&gt; unpaidInvoices, List&lt;Payment&gt; unmatchedPayments) {}
+
+    public static Result reconcile(List&lt;Invoice&gt; invoices, List&lt;Payment&gt; payments, BigDecimal tolerance, int maxDays) {
+        Set&lt;Long&gt; used = new HashSet&lt;&gt;();
+        Set&lt;String&gt; done = new HashSet&lt;&gt;();
+        List&lt;Match&gt; matched = new ArrayList&lt;&gt;();
+        List&lt;Match&gt; mismatch = new ArrayList&lt;&gt;();
+
+        // pass 1: by reference
+        for (Invoice inv : invoices) {
+            String key = normalise(inv.number());
+            if (key.isEmpty()) continue;
+            for (Payment p : payments) {
+                if (used.contains(p.id()) || !p.currency().equals(inv.currency()) || !normalise(p.description()).contains(key)) continue;
+                BigDecimal diff = p.amount().subtract(inv.total());
+                (diff.abs().compareTo(tolerance) &lt;= 0 ? matched : mismatch).add(new Match(inv.number(), p.id(), diff));
+                used.add(p.id());
+                done.add(inv.number());
+                break;
+            }
+        }
+
+        // pass 2: by amount and date window ... (see the repository)
+    }</code></pre></figure>
+
+    <h2>It running</h2>
+    <p>The built jar on the sample files. The Python version gives exactly the same result on the same files, a useful cross-check of both implementations.</p>
+    <figure><figcaption>$ java -jar target/invoice-reconciler-java-0.1.0.jar reconcile sample_data/invoices sample_data/bank.csv</figcaption><pre><code>matched: 1
+amount mismatch: 1
+unpaid invoices: 1
+unmatched payments: 1
+  mismatch BO-5521: payment #2, difference -5.00
+  unpaid GC-77: 59.90 EUR
+  unmatched payment #3: 300.00 EUR (Unknown sender)
+  skipped (unreadable): notes.txt</code></pre></figure>
+
+    <h2>A test</h2>
+    <figure><figcaption>ReconcilerTest.java</figcaption><pre><code>    @Test
+    void aPaymentIsUsedOnlyOnceAndTheCurrencyMustAgree() {
+        List&lt;Invoice&gt; invoices = List.of(invoice("A-1", "2026-09-01", "50.00", "EUR"), invoice("A-2", "2026-09-01", "50.00", "EUR"));
+        Reconciler.Result one = Reconciler.reconcile(invoices, List.of(payment(1, "2026-09-05", "50.00", "EUR", "one payment only")), TOLERANCE, 60);
+        assertEquals(1, one.matched().size());
+        assertEquals(1, one.unpaidInvoices().size());
+
+        Reconciler.Result wrongCurrency = Reconciler.reconcile(invoices, List.of(payment(1, "2026-09-05", "50.00", "USD", "wrong currency")), TOLERANCE, 60);
+        assertEquals(2, wrongCurrency.unpaidInvoices().size());
+    }</code></pre></figure>
+
+    <h2>Tests</h2>
+    <p>22 JUnit 5 tests pass with <code>mvn test</code> (BUILD SUCCESS), including parameterized tests for the amount formats. Covered: amount and date formats, exact decimal arithmetic, field extraction,
+    both matching passes, the one-payment-once rule, the currency check, the date window, the tolerance, and the whole program end to end on temporary files.
+    A GitHub Actions workflow is included; it runs once the repository is on GitHub (it has not been run yet).</p>
+    <p class="stack"><strong>Stack:</strong> Java 21, Maven, JUnit 5, Git.</p>
+    <p class="muted">Source code available on request.</p>
+
+    <p class="next">Back to <a href="../index.html#projects">all projects</a></p>
+  </main>
+  <footer class="foot"><div class="wrap"><p>Michał Ciura · Częstochowa, Poland · This page was built with AI coding assistance.</p></div></footer>
+</body>
+</html>
